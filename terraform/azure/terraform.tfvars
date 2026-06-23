@@ -1,0 +1,7 @@
+subscription_id     = "c064671c-8f74-4fec-b088-b53c568245eb"
+tenant_id           = "e36377b7-70c4-4493-a338-095918d327e9"
+resource_group_name = "S1500487"
+ssh_public_key      = "/home/student/.ssh/azure.pub"
+vm_size             = "Standard_B2ats_v2"
+vm_name             = "hybrid-web-01"
+ip_output_file      = "/tmp/week6_azure_ip.txt"

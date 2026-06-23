@@ -1,0 +1,16 @@
+---
+- name: Configureer Azure webserver
+  hosts: azure
+  become: true
+  gather_facts: true
+
+  roles:
+    - role_web
+
+- name: Configureer ESXi databaseserver
+  hosts: esxi
+  become: true
+  gather_facts: true
+
+  roles:
+    - luukwindesheim.role_db
