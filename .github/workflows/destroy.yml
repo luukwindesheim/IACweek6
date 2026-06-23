@@ -1,0 +1,39 @@
+name: Hybrid Cloud Destroy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  destroy-azure:
+    name: Verwijder Azure resources
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Terraform init
+        run: terraform init
+        working-directory: terraform/azure
+
+      - name: Terraform destroy
+        run: terraform destroy -auto-approve
+        working-directory: terraform/azure
+
+  destroy-esxi:
+    name: Verwijder ESXi VM
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Terraform init
+        run: terraform init
+        working-directory: terraform/esxi
+        env:
+          TF_VAR_vsphere_password: ${{ secrets.VSPHERE_PASSWORD }}
+
+      - name: Terraform destroy
+        run: terraform destroy -auto-approve
+        working-directory: terraform/esxi
+        env:
+          TF_VAR_vsphere_password: ${{ secrets.VSPHERE_PASSWORD }}

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>Hybrid Cloud Demo</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .azure { background: #0078d4; color: white; padding: 20px; border-radius: 8px; }
+        .esxi  { background: #607D8B; color: white; padding: 20px; border-radius: 8px; margin-top: 20px; }
+        h1 { margin-top: 0; }
+    </style>
+</head>
+<body>
+    <h1>Hybrid Cloud Deployment</h1>
+
+    <div class="azure">
+        <h1>Azure VM (webserver)</h1>
+        <p>Hostname: {{ ansible_hostname }}</p>
+        <p>IP: {{ ansible_default_ipv4.address }}</p>
+        <p>Deployed via: Terraform + Ansible + Docker Compose</p>
+    </div>
+
+    <div class="esxi">
+        <h1>ESXi VM (database)</h1>
+        <p>Host: hybrid-db-01 (lokaal netwerk)</p>
+        <p>Service: MariaDB</p>
+        <p>Deployed via: Terraform + Ansible (Galaxy role)</p>
+    </div>
+</body>
+</html>

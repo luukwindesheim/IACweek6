@@ -1,0 +1,94 @@
+name: Hybrid Cloud Deploy
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  terraform-azure:
+    name: Stage 1 - Terraform Azure
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Terraform init
+        run: terraform init
+        working-directory: terraform/azure
+
+      - name: Terraform fmt check
+        run: terraform fmt -check
+        working-directory: terraform/azure
+
+      - name: Terraform validate
+        run: terraform validate
+        working-directory: terraform/azure
+
+      - name: Terraform apply
+        run: terraform apply -auto-approve
+        working-directory: terraform/azure
+
+  terraform-esxi:
+    name: Stage 2 - Terraform ESXi
+    runs-on: self-hosted
+    needs: terraform-azure
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Terraform init
+        run: terraform init
+        working-directory: terraform/esxi
+        env:
+          TF_VAR_vsphere_password: ${{ secrets.VSPHERE_PASSWORD }}
+
+      - name: Terraform fmt check
+        run: terraform fmt -check
+        working-directory: terraform/esxi
+
+      - name: Terraform validate
+        run: terraform validate
+        working-directory: terraform/esxi
+        env:
+          TF_VAR_vsphere_password: ${{ secrets.VSPHERE_PASSWORD }}
+
+      - name: Terraform apply
+        run: terraform apply -auto-approve
+        working-directory: terraform/esxi
+        env:
+          TF_VAR_vsphere_password: ${{ secrets.VSPHERE_PASSWORD }}
+
+  ansible:
+    name: Stage 3 - Ansible
+    runs-on: self-hosted
+    needs: [terraform-azure, terraform-esxi]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Genereer inventory vanuit Terraform outputs
+        run: |
+          AZURE_IP=$(cat /tmp/week6_azure_ip.txt)
+          ESXI_IP=$(cat /tmp/week6_esxi_ip.txt)
+          cat > ansible/inventory.ini <<EOF
+          [azure]
+          ${AZURE_IP} ansible_user=iac ansible_ssh_private_key_file=~/.ssh/azure
+
+          [esxi]
+          ${ESXI_IP} ansible_user=student ansible_ssh_private_key_file=~/.ssh/skylab
+          EOF
+
+      - name: Installeer Galaxy roles
+        run: ansible-galaxy install -r requirements.yml
+        working-directory: ansible
+
+      - name: Wacht tot VMs bereikbaar zijn
+        run: |
+          AZURE_IP=$(cat /tmp/week6_azure_ip.txt)
+          ESXI_IP=$(cat /tmp/week6_esxi_ip.txt)
+          timeout 300 bash -c "until ssh -o StrictHostKeyChecking=no -i ~/.ssh/azure iac@${AZURE_IP} echo ok 2>/dev/null; do sleep 10; done"
+          timeout 300 bash -c "until ssh -o StrictHostKeyChecking=no -i ~/.ssh/skylab student@${ESXI_IP} echo ok 2>/dev/null; do sleep 10; done"
+
+      - name: Voer Ansible playbook uit
+        run: ansible-playbook -i inventory.ini site.yml
+        working-directory: ansible

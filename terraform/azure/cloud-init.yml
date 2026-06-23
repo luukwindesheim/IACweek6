@@ -1,0 +1,10 @@
+#cloud-config
+packages:
+  - curl
+  - ca-certificates
+
+runcmd:
+  - curl -fsSL https://get.docker.com | sh
+  - systemctl enable docker
+  - systemctl start docker
+  - usermod -aG docker iac

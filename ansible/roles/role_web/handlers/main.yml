@@ -1,0 +1,6 @@
+---
+- name: Herstart webapp
+  ansible.builtin.command:
+    cmd: docker compose restart
+    chdir: /opt/webapp
+  changed_when: true

@@ -1,0 +1,19 @@
+#cloud-config
+users:
+  - name: ${admin_user}
+    groups: [sudo, docker]
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ${ssh_pubkey}
+
+package_update: true
+packages:
+  - curl
+  - ntpdate
+
+runcmd:
+  - ntpdate -u pool.ntp.org
+  - curl -fsSL https://get.docker.com | sh
+  - systemctl enable docker
+  - systemctl start docker

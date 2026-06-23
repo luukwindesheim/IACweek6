@@ -1,0 +1,31 @@
+---
+- name: Zorg dat Docker actief is
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Maak app directory aan
+  ansible.builtin.file:
+    path: /opt/webapp
+    state: directory
+    mode: "0755"
+
+- name: Plaats docker-compose.yml
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: /opt/webapp/docker-compose.yml
+    mode: "0644"
+
+- name: Plaats index.html
+  ansible.builtin.template:
+    src: index.html.j2
+    dest: /opt/webapp/index.html
+    mode: "0644"
+  notify: Herstart webapp
+
+- name: Start webapp via Docker Compose
+  ansible.builtin.command:
+    cmd: docker compose up -d --pull always
+    chdir: /opt/webapp
+  changed_when: true
